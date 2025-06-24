@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LangGraph Workflow Chatbot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Basic reset and styling */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        /* Chat container styling */
+        .chat-container {
+            position: fixed;
+            bottom: 0; /* Stick it to the bottom of the screen */
+            right: 10px;
+            width: 90vw;  /* Flexible width using viewport width */
+            max-width: 600px; /* Ensures it doesn’t exceed this on large screens */
+            height: 70vh; /* Adjustable height using viewport height */
+            max-height: 750px; /* Limit maximum height */
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: none; /* Initially hidden */
+            flex-direction: column;
+            padding: 15px;
+            padding-top: 50px; /* Increased top padding to create space for the close button */
+            z-index: 1000;
+            overflow: hidden; /* Prevents overflow */
+        }
+
+        /* Chat window styles */
+        .chat-window {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto; /* Allows scrolling */
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%; /* Prevents the chat window from growing too large */
+        }
+        .chat-window::-webkit-scrollbar {
+            display: none; /* Hides the scrollbar */
+        }
+
+        /* Message bubble styles */
+        .message {
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        /* Sender's message styling */
+        .sender {
+            align-self: flex-start;
+            background-color: #e6e6e6;
+            color: #333;
+            border-radius: 15px 15px 0 15px;
+        }
+
+        /* Bot's message styling */
+        .bot {
+            align-self: flex-end;
+            background-color: #0084FF;
+            color: white;
+            border-radius: 15px 15px 15px 0;
+        }
+
+        /* Input field styling */
+        .chat-input {
+            display: flex;
+            align-items: center;
+            height: 50px;
+            padding: 5px;
+            background-color: #fff;
+            position: relative; /* Position for the arrow icon */
+            border: 1px solid #dbd9d9;
+            border-radius: 50px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #fff;
+            border-radius: 20px;
+            font-size: 16px;
+            padding-right: 40px; /* Space for the icon inside the input */
+
+        }
+
+                /* Arrow icon inside the input field */
+        .send-icon {
+            position: absolute;
+            right: 10px; /* Position the icon inside the input field */
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 24px; /* Adjust the size of the arrow */
+            color: #0084FF; /* Change the color to match your theme */
+        }
+
+        .send-icon:hover {
+            color: #0084FF; /* Slightly darker blue on hover */
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            background-color: #0084FF;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input:focus-visible, input:active, input:focus, input:focus-within, input:target {
+            outline: none !important;
+            border: none !important;
+        }
+
+        /* Floating button styling */
+        .chatbot-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #0084FF;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 50%;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: block;
+        }
+
+        /* Close button for the chat window */
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #0084FF;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 30px;
+            cursor: pointer;
+            padding: 10px;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Mobile view adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 90vw;  /* Ensure container is more flexible */
+                height: 60vh;  /* Adjust height for smaller screens */
+            }
+
+            .chatbot-button {
+                bottom: 10px;
+                right: 10px;
+                padding: 12px 18px;
+            }
+
+            .chat-input input {
+                font-size: 14px;
+            }
+
+            .chat-input button {
+                font-size: 14px;
+            }
+
+            .close-button {
+                font-size: 24px;
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chat-container {
+                width: 90vw;  /* Flexible width */
+                height: 55vh;  /* Further adjust height */
+                max-height: 70vh; /* Keep it within the viewport */
+            }
+
+            .chatbot-button {
+                bottom: 5px;
+                right: 5px;
+                padding: 10px 15px;
+            }
+
+            .chat-input input {
+                font-size: 12px;
+            }
+
+            .chat-input button {
+                font-size: 12px;
+            }
+
+            .close-button {
+                font-size: 20px;
+                width: 25px;
+                height: 25px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+    <!-- Chatbot Button -->
+    <button class="chatbot-button" onclick="toggleChatbot()">💬</button>
+
+    <!-- Chatbot Window -->
+    <div class="chat-container" id="chat-container">
+        <button class="close-button" onclick="closeChatbot()">×</button>
+        <div class="chat-window" id="chat-window">
+            <!-- Chat messages will appear here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message..." onkeypress="if(event.keyCode == 13) sendMessage()">
+            <!-- <button onclick="sendMessage()">Send</button> -->
+            <i class="fas fa-chevron-circle-right" style="color: #0084FF;position: absolute;right: 5px; font-size: 40px;" class="send-icon" onclick="sendMessage()" ></i>    
+            <div >
+             <!-- Unicode right arrow -->
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables
+        let sessionID = null;
+        var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        var wsUrl = `${protocol}//${window.location.host}/fastapi-ws`;
+        var ws = new WebSocket(wsUrl);
+
+        ws.onopen = function () {
+            console.log('WebSocket connected');
+            console.log('Session ID:', sessionID);
+            console.log('Connecting to WebSocket:', ws);
+        };
+
+        ws.onmessage = function (event) {
+            console.log('WebSocket message received:', event.data);
+            try {
+                const data = JSON.parse(event.data);
+                switch (data.type) {
+                    case "connection":
+                        sessionID = data.sid;
+                        startWorkflow();
+                        break;
+                    case "reply":
+                        addMessage("Bot", data.content);
+                        break;
+                    case "state_json":
+                        displayJsonData(data.content);
+                        break;
+                }
+            } catch (e) {
+                console.log("Raw message:", event.data);
+            }
+        };
+
+        function startWorkflow() {
+            if (!sessionID) {
+                console.log("Session ID not set. Can't start workflow.");
+                return;
+            }
+
+            console.log('Starting workflow for session:', sessionID);
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: "message",
+                    content: "start_workflow",
+                    sid: sessionID
+                }));
+                console.log('Workflow started');
+            }
+        }
+
+        function toggleChatbot() {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.style.display = (chatContainer.style.display === 'none' || chatContainer.style.display === '') ? 'flex' : 'none';
+        }
+
+        function closeChatbot() {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.style.display = 'none';
+        }
+
+        function addMessage(sender, message) {
+            const messageDiv = document.createElement('div');
+            const chatWindow = document.getElementById('chat-window');
+            messageDiv.textContent = message;
+            messageDiv.classList.add('message');
+            
+            // Map keywords to images
+            const imageMapping = [
+                {
+                    keywords: ["universal 5/8 inch corner castings in good condition without major dents or defects"],
+                    src: "/static/images/blueconer.PNG",
+                    alt: "Corner Casting Example"
+                },
+                {
+                    keywords: ["container have any protrusions on the ends or top"],
+                    src: "/static/images/container_Side.PNG",
+                    alt: "Protrusions Example"
+                },
+                {
+                    keywords: ["long sides of your container have any protrusions" ],
+                    src: "/static/images/container_back.PNG",
+                    alt: "Surface Type Example"
+                }
+                ,
+                {
+                    keywords: ["lifting setup", "right/left side", "load/unload"],
+                    src: "/static/images/container_load.PNG",
+                    alt: "Surface Type Example"
+                }
+                ,
+                {
+                    keywords: [" the container door opening direction for pickup"],
+                    src: "/static/images/container_dooropen.PNG",
+                    alt: "Surface Type Example"
+                }                
+                ,
+                {
+                    keywords: ["approximate grade of the pickup location"],
+                    src: "/static/images/container_pickup_loaction.PNG",
+                    alt: "Surface Type Example"
+                }
+                ,
+                {
+                    keywords: ["dropping setup", "similar to lifting setup"],
+                    src: "/static/images/DropOff_delivery.PNG",
+                    alt: "Surface Type Example"
+                }
+                ,
+                {
+                    keywords: ["container door open at", "drop-off"],
+                    src: "/static/images/container_dooropen2.PNG",
+                    alt: "Surface Type Example"
+                }
+                ,
+                {
+                    keywords: [" approximate grade of the drop off location"],
+                    src: "/static/images/container_pickup_loaction2.PNG",
+                    alt: "Surface Type Example"
+                }
+            ];
+
+            let matchedImage = null;
+
+            // Check all mappings
+            for (const item of imageMapping) {
+                if (item.keywords.some(keyword => message.toLowerCase().includes(keyword))) {
+                    matchedImage = item;
+                    break;
+                }
+            }
+
+            // Build the message
+            messageDiv.textContent = message;
+
+            if (matchedImage) {
+                const image = document.createElement('img');
+                image.src = matchedImage.src;
+                image.alt = matchedImage.alt;
+                image.style.width = "100%";
+                image.style.marginTop = "10px";
+                image.style.borderRadius = "8px";
+
+                messageDiv.appendChild(document.createElement('br'));
+                messageDiv.appendChild(image);
+            }
+
+
+            // Set classes based on sender
+            if (sender === "You") {
+                messageDiv.classList.add('sender');  // User's message
+            } else {
+                messageDiv.classList.add('bot');     // Bot's message
+            }
+
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('user-input');
+            const message = messageInput.value.trim();
+            if (message === "") {
+                messageInput.value = ''; // Clear the input field
+                return;
+            }
+
+            addMessage("You", message);
+
+            if (message) {
+                ws.send(JSON.stringify({
+                    type: "message",
+                    content: message,
+                    sid: sessionID
+                }));
+                messageInput.value = ''; // Clear the input field
+            } else {
+                console.error('WebSocket not connected');
+            }
+        }
+    </script>
+</body>
+
+</html>
