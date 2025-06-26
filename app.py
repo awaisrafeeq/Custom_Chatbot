@@ -19,7 +19,6 @@ import json
 import asyncio
 
 import uvicorn
-from ollama import Ollama
 
 
 dotenv.load_dotenv()
@@ -172,11 +171,8 @@ def is_complete_less3(state: SessionState) -> bool:
     
     return True
 
-# Initialize the Ollama LLM with the Deepseek r1:32b model
-llm = Ollama(model="deepseek-r1:32b" , device="cuda" )
-
-# # Initialize the LLM.
-# llm = ChatOpenAI(model="gpt-4o")
+# Initialize the LLM.
+llm = ChatOpenAI(model="gpt-4o")
 
 # Prompt template to ask the user for missing information.
 question_prompt_personal_detail = PromptTemplate(
@@ -461,7 +457,7 @@ async def ask_question_node(state: SessionState) -> SessionState:
     formatted_prompt = question_prompt_personal_detail.format(history=history_str, current_state=state["personal_detail"])
     
     # Call the LLM to generate a question.
-    response = llm.call({
+    response = LLMChain(llm=llm, prompt=question_prompt_personal_detail).run({
         "history": history_str,
         "current_state": state["personal_detail"]
     })
@@ -490,7 +486,7 @@ async def process_answer_node(state: SessionState) -> SessionState:
     )
     
     # Call the LLM to update the state.
-    response = llm.call({
+    response = LLMChain(llm=llm, prompt=state_update_prompt_personal_detail).run({
         "history": history_str,
         "current_state": state["personal_detail"],
         "question": state["current_question"],
@@ -535,7 +531,7 @@ async def more_than_3_ask_node(state: SessionState) -> SessionState:
     formatted_prompt = question_prompt_more3.format(history=history_str, current_state=session.state["more_3"])
     
     # Call the LLM to generate a question.
-    response = llm.call({
+    response = LLMChain(llm=llm, prompt=question_prompt_more3).run({
         "history": history_str,
         "current_state": session.state["more_3"]
     })
@@ -566,7 +562,7 @@ async def more_than_3_process_node(state: SessionState) -> SessionState:
     )
     
     # Call the LLM to update the state.
-    response = llm.call({
+    response = LLMChain(llm=llm, prompt=state_update_prompt_more3).run({
         "history": history_str,
         "current_state": session.state["more_3"],
         "question": session.current_question,
@@ -608,7 +604,7 @@ async def less_than_3_ask_node(state: SessionState) -> SessionState:
     formatted_prompt = question_prompt_less3.format(history=history_str, current_state=session.state["less_3"])
     
     # Call the LLM to generate a question.
-    response = llm.call({
+    response = LLMChain(llm=llm, prompt=question_prompt_less3).run({
         "history": history_str,
         "current_state": session.state["less_3"]
     })
@@ -638,7 +634,7 @@ async def less_than_3_process_node(state: SessionState) -> SessionState:
     )
     
     # Call the LLM to update the state.
-    response = llm.call({
+    response = LLMChain(llm=llm, prompt=state_update_prompt_less3).run({
         "history": history_str,
         "current_state": session.state["less_3"],
         "question": session.current_question,
