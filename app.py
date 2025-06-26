@@ -171,8 +171,11 @@ def is_complete_less3(state: SessionState) -> bool:
     
     return True
 
-# Initialize the LLM.
-llm = ChatOpenAI(model="gpt-4o")
+# # Initialize the LLM.
+# llm = ChatOpenAI(model="gpt-4o")
+
+# Initialize the Ollama LLM with the Deepseek r1:32b model
+llm = Ollama(model="deepseek-r1:32b" , device="cuda" )
 
 # Prompt template to ask the user for missing information.
 question_prompt_personal_detail = PromptTemplate(
