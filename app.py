@@ -19,8 +19,6 @@ import json
 import asyncio
 
 import uvicorn
-import ollama
-
 
 
 dotenv.load_dotenv()
@@ -173,9 +171,8 @@ def is_complete_less3(state: SessionState) -> bool:
     
     return True
 
-# Initialize the LLM with Ollama
-llm = ollama.Chat(model="deepseek-r1:32b", gpu=True)  # Specify GPU usage
-
+# Initialize the LLM.
+llm = ChatOpenAI(model="gpt-4o")
 
 # Prompt template to ask the user for missing information.
 question_prompt_personal_detail = PromptTemplate(
