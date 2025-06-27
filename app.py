@@ -19,7 +19,8 @@ import json
 import asyncio
 
 import uvicorn
-
+import torch
+print(torch.cuda.is_available())  # This should print True if GPU is available.
 
 dotenv.load_dotenv()
 
@@ -171,8 +172,10 @@ def is_complete_less3(state: SessionState) -> bool:
     
     return True
 
-# Initialize the LLM.
-llm = ChatOpenAI(model="gpt-4o")
+# # Initialize the LLM.
+# llm = ChatOpenAI(model="gpt-4o")
+llm = ollama.Chat(model="deepseek-r1:32b", gpu=True)
+
 
 # Prompt template to ask the user for missing information.
 question_prompt_personal_detail = PromptTemplate(
