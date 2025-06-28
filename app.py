@@ -86,10 +86,18 @@ active_websockets: Dict[str, WebSocket] = {}
 
 
 
+# def clean_json_response(response: str) -> str:
+#     # Extract JSON between ```json ... ```
+#     match = re.search(r"```json(.*?)```", response.strip(), re.DOTALL)
+#     return match.group(1).strip()
 def clean_json_response(response: str) -> str:
     # Extract JSON between ```json ... ```
     match = re.search(r"```json(.*?)```", response.strip(), re.DOTALL)
-    return match.group(1).strip()
+    
+    if match:
+        return match.group(1).strip()
+    else:
+        raise ValueError("No JSON block found in the response.")
 
 
 
