@@ -86,22 +86,9 @@ active_websockets: Dict[str, WebSocket] = {}
 
 
 def clean_json_response(response: str) -> str:
-    # Check if the response is empty or malformed
-    if not response.strip():
-        print("Received empty response or malformed data.")
-        return "No content"  # Return a default value or handle this case as needed
-    
-    # Debug: Log the incoming response
-    print(f"Received response: {response.strip()}")
-    
     # Extract JSON between ```json ... ```
     match = re.search(r"```json(.*?)```", response.strip(), re.DOTALL)
-    
-    if match:
-        return match.group(1).strip()
-    else:
-        print("No JSON block found in the response.")
-        raise ValueError("No JSON block found in the response.")
+    return match.group(1).strip()
 
 
 def get_session(sid: str) -> UnifiedSession:
